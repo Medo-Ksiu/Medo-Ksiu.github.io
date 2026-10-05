@@ -109,7 +109,8 @@ window.PORTFOLIO = {
     web: { en: "Web systems", ar: "أنظمة ويب" },
     ml: { en: "AI & ML", ar: "ذكاء اصطناعي" },
     data: { en: "Data & databases", ar: "بيانات وقواعد بيانات" },
-    desktop: { en: "Desktop apps", ar: "تطبيقات ديسكتوب" }
+    desktop: { en: "Desktop apps", ar: "تطبيقات ديسكتوب" },
+    "3d": { en: "3D & WebGL", ar: "3D و WebGL" }
   },
 
   /* ---------- المشاريع ----------
@@ -153,6 +154,151 @@ window.PORTFOLIO = {
       color: "#2F6E8A",
       image: "assets/projects/crm-dashboard.jpg",
       featured: true
+    },
+    {
+      "id": "tour-horizon",
+      "file": "horizon/index.html",
+      "title": {
+        "en": "Horizon Center — 3D Tour",
+        "ar": "Horizon Center — جولة 3D"
+      },
+      "summary": {
+        "en": "Walk a conference and expo venue in first person, right in the browser: lobby, main hall, gallery, tech expo, meeting room and café. Works on desktop and phone.",
+        "ar": "اتمشى جوه مركز مؤتمرات ومعارض بكاميرا First Person من المتصفح: لوبي، مسرح رئيسي، جاليري، معرض تكنولوجيا، غرفة اجتماعات وكافيه. شغال على الكمبيوتر والموبايل."
+      },
+      "details": {
+        "en": [
+          "Part of a set of three tours: Horizon Center, Lumière Halls and Aurora Museum — all linked from the tours page.",
+          "First-person camera: WASD and mouse on desktop, a virtual joystick and swipe-to-look on phones.",
+          "Wall and furniture collisions, doors that open as you approach, smooth movement and a subtle head bob.",
+          "Live minimap with your position and view direction, plus one-tap jumps to any room.",
+          "Info cards appear when you walk up to an exhibit.",
+          "Built entirely in code with Three.js on a shared tour engine: no heavy 3D files, so it loads fast on mobile data."
+        ],
+        "ar": [
+          "جزء من 3 جولات: Horizon Center وLumière Halls وAurora Museum — كلهم في صفحة الجولات.",
+          "كاميرا First Person: كيبورد وماوس على الكمبيوتر، وجويستيك وسحب للنظر على الموبايل.",
+          "تصادم مع الحيطان والعفش، وأبواب بتتفتح لما تقرب، وحركة ناعمة.",
+          "خريطة صغيرة بمكانك واتجاه نظرك، وزراير تنقلك لأي قاعة بضغطة.",
+          "كروت معلومات بتظهر لما تقرب من أي معروض.",
+          "معمول كله بالكود بـ Three.js على محرك جولات مشترك، من غير ملفات 3D تقيلة، فبيحمّل بسرعة على الموبايل."
+        ]
+      },
+      "category": "3d",
+      "stack": [
+        "Three.js",
+        "WebGL",
+        "JavaScript",
+        "Touch controls"
+      ],
+      "year": "2026",
+      "status": {
+        "en": "Live demo",
+        "ar": "ديمو شغال"
+      },
+      "links": {
+        "live": "https://medo-ksiu.github.io/virtual-tour/horizon/",
+        "code": ""
+      },
+      "color": "#2E6B7A",
+      "image": "",
+      "featured": true
+    },
+    {
+      "id": "tour-lumiere",
+      "file": "lumiere/index.html",
+      "title": {
+        "en": "Lumière Halls — 3D Tour",
+        "ar": "Lumière Halls — جولة 3D"
+      },
+      "summary": {
+        "en": "An evening walkthrough of a wedding venue: ballroom with chandeliers, a stage and a moving-light dance floor, henna hall, bridal suite and a garden terrace.",
+        "ar": "جولة مسائية في قاعة أفراح: بول روم بنجف وكوشة وساحة رقص بإضاءة متحركة، قاعة حنة، جناح العروسة، وجنينة بإضاءة معلّقة."
+      },
+      "details": {
+        "en": [
+          "18 round tables, a four-tier cake, a fountain and 140 twinkling string lights, all generated in code.",
+          "First-person camera: WASD and mouse on desktop, a virtual joystick and swipe-to-look on phones.",
+          "Wall and furniture collisions, doors that open as you approach, smooth movement and a subtle head bob.",
+          "Live minimap with your position and view direction, plus one-tap jumps to any room.",
+          "Info cards appear when you walk up to an exhibit.",
+          "Built entirely in code with Three.js on a shared tour engine: no heavy 3D files, so it loads fast on mobile data."
+        ],
+        "ar": [
+          "18 ترابيزة دايرية، تورتة 4 أدوار، نافورة، و140 لمبة بتنور وتطفي، كلهم معمولين بالكود.",
+          "كاميرا First Person: كيبورد وماوس على الكمبيوتر، وجويستيك وسحب للنظر على الموبايل.",
+          "تصادم مع الحيطان والعفش، وأبواب بتتفتح لما تقرب، وحركة ناعمة.",
+          "خريطة صغيرة بمكانك واتجاه نظرك، وزراير تنقلك لأي قاعة بضغطة.",
+          "كروت معلومات بتظهر لما تقرب من أي معروض.",
+          "معمول كله بالكود بـ Three.js على محرك جولات مشترك، من غير ملفات 3D تقيلة، فبيحمّل بسرعة على الموبايل."
+        ]
+      },
+      "category": "3d",
+      "stack": [
+        "Three.js",
+        "WebGL",
+        "JavaScript",
+        "Touch controls"
+      ],
+      "year": "2026",
+      "status": {
+        "en": "Live demo",
+        "ar": "ديمو شغال"
+      },
+      "links": {
+        "live": "https://medo-ksiu.github.io/virtual-tour/lumiere/",
+        "code": ""
+      },
+      "color": "#8A5A3C",
+      "image": ""
+    },
+    {
+      "id": "tour-aurora",
+      "file": "aurora/index.html",
+      "title": {
+        "en": "Aurora Museum — 3D Tour",
+        "ar": "Aurora Museum — جولة 3D"
+      },
+      "summary": {
+        "en": "A night tour of a museum: an open-sky atrium with an orbiting solar system, Ancient Egypt, modern art, an ocean room and a planetarium.",
+        "ar": "جولة ليلية في متحف: أتريوم مفتوح على السما فيه مجموعة شمسية بتلف، قاعة مصر القديمة، فن حديث، قاعة المحيط، وقبة سماوية."
+      },
+      "details": {
+        "en": [
+          "Pyramids of Giza model, golden mask and sarcophagus in glass cases, swimming fish, a suspended whale and a star projector.",
+          "First-person camera: WASD and mouse on desktop, a virtual joystick and swipe-to-look on phones.",
+          "Wall and furniture collisions, doors that open as you approach, smooth movement and a subtle head bob.",
+          "Live minimap with your position and view direction, plus one-tap jumps to any room.",
+          "Info cards appear when you walk up to an exhibit.",
+          "Built entirely in code with Three.js on a shared tour engine: no heavy 3D files, so it loads fast on mobile data."
+        ],
+        "ar": [
+          "مجسم أهرامات الجيزة، قناع ذهبي وتابوت في فتارين، سمك بيعوم، حوت معلّق، وجهاز عرض نجوم.",
+          "كاميرا First Person: كيبورد وماوس على الكمبيوتر، وجويستيك وسحب للنظر على الموبايل.",
+          "تصادم مع الحيطان والعفش، وأبواب بتتفتح لما تقرب، وحركة ناعمة.",
+          "خريطة صغيرة بمكانك واتجاه نظرك، وزراير تنقلك لأي قاعة بضغطة.",
+          "كروت معلومات بتظهر لما تقرب من أي معروض.",
+          "معمول كله بالكود بـ Three.js على محرك جولات مشترك، من غير ملفات 3D تقيلة، فبيحمّل بسرعة على الموبايل."
+        ]
+      },
+      "category": "3d",
+      "stack": [
+        "Three.js",
+        "WebGL",
+        "JavaScript",
+        "Touch controls"
+      ],
+      "year": "2026",
+      "status": {
+        "en": "Live demo",
+        "ar": "ديمو شغال"
+      },
+      "links": {
+        "live": "https://medo-ksiu.github.io/virtual-tour/aurora/",
+        "code": ""
+      },
+      "color": "#4B3F8F",
+      "image": ""
     },
     {
       id: "skin-consult",

@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Aurora Museum — 3D Tour</title>
+<meta name="description" content="First-person 3D night tour of a museum. Desktop and phone.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../tour.css">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }</script>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="card">
+    <small>3D TOUR 03 · MUSEUM AT NIGHT</small>
+    <h1>Aurora Museum</h1>
+    <p>A night visit to a fictional museum: an open-sky atrium with a moving solar system, an Ancient Egypt hall, modern art, an ocean room and a planetarium.</p>
+    <div class="keys" id="keys"></div>
+    <button class="go" id="go" type="button" disabled>Loading 3D engine…</button>
+    <div class="credit"><a href="../">← All tours</a> · Built by <a href="https://medo-ksiu.github.io/" target="_blank" rel="noopener">Mohamed Mohey AL-Deen</a></div>
+    <div class="err" id="err" hidden>The 3D engine couldn't load. Check your connection and refresh.</div>
+  </div>
+</div>
+<script>setTimeout(function () { if (!window.__tourReady) document.getElementById("err").hidden = false; }, 15000);</script>
+<script type="module">
+import { createTour } from "../engine.js";
+
+createTour({
+  title: "Aurora Museum", accent: "#B7A6F2", H: 7, exposure: 1.15,
+  wallColor: 0x2b2f3a, ceilingColor: 0x1d2029,
+  sky: ["#04060d", "#0b1430", "#1a2b4a"],
+  fog: { color: 0x0a0f1e, near: 35, far: 120 },
+  groundMat: null,
+  start: { x: 0, z: 25, yaw: 0 },
+  entrance: { x: 0, z: 14, w: 3.4 },
+  map: { x0: -22, x1: 22, z0: -20, z1: 20 },
+  outside: { name: "Outside", tag: "AURORA MUSEUM", spawn: [0, 25, 0] },
+  zones: [
+    { name: "Entrance Hall", tag: "TICKETS & INFO", short: "Entrance", x1: -6, x2: 6, z1: 6, z2: 14, spawn: [0, 12.5, 0] },
+    { name: "Atrium", tag: "OPEN SKY · SOLAR SYSTEM", x1: -8, x2: 8, z1: -10, z2: 6, spawn: [0, 4.5, 0] },
+    { name: "Ancient Egypt", tag: "GALLERY 1", short: "Egypt", x1: -20, x2: -8, z1: -18, z2: 6, spawn: [-12.6, 4.6, Math.PI * 0.15] },
+    { name: "Modern Art", tag: "GALLERY 2", short: "Modern", x1: 8, x2: 20, z1: -18, z2: 6, spawn: [12.6, 4.6, -Math.PI * 0.15] },
+    { name: "Planetarium", tag: "STAR SHOW", short: "Stars", x1: -8, x2: 8, z1: -18, z2: -10, spawn: [0, -11, 0] },
+    { name: "Ocean Deep", tag: "TEMPORARY EXHIBITION", short: "Ocean", x1: -20, x2: -6, z1: 6, z2: 14, spawn: [-8.2, 10, Math.PI / 2] },
+    { name: "Museum Shop", tag: "GIFTS & BOOKS", short: "Shop", x1: 6, x2: 20, z1: 6, z2: 14, spawn: [8.2, 10, -Math.PI / 2] }
+  ]
+}, (a) => {
+  const { THREE, scene, M, H, box, collide, plane, wallX, wallZ, floor, ceiling, plant, tree, sign, frameArt, light, exhibit, animate, tileTex, canvasTex, artTex, rng } = a;
+  const sand = new THREE.MeshStandardMaterial({ color: 0xc9a46a, roughness: 0.85 });
+  const basalt = new THREE.MeshStandardMaterial({ color: 0x2a2a2e, roughness: 0.7 });
+  const plinth = new THREE.MeshStandardMaterial({ color: 0x15171d, roughness: 0.5 });
+  const lapis = new THREE.MeshStandardMaterial({ color: 0x1f3f8f, roughness: 0.4, metalness: 0.3 });
+  const caseGlass = new THREE.MeshStandardMaterial({ color: 0xcfe6ff, transparent: true, opacity: 0.16, roughness: 0.02, metalness: 0.1, depthWrite: false });
+  const beam = new THREE.MeshStandardMaterial({ color: 0x3a3f4c, metalness: 0.6, roughness: 0.4 });
+  const r = rng(9);
+
+  /* outside: night plaza */
+  scene.children.find((c) => c.isMesh && c.geometry.parameters && c.geometry.parameters.width === 300).material = new THREE.MeshStandardMaterial({ color: 0x1c2330, roughness: 1 });
+  plane(5, 12, M.stone, 0, 0.003, 20.5, -Math.PI / 2);
+  plane(46, 3, M.stone, 0, 0.003, 15.6, -Math.PI / 2);
+  for (const [x, z] of [[-10, 20], [10, 20], [-16, 26], [16, 26], [-26, 0], [26, 0]]) tree(x, z, 1, new THREE.MeshStandardMaterial({ color: 0x1f4030, roughness: 1 }));
+  // stars
+  const starGeo = new THREE.BufferGeometry(), sp = [];
+  for (let i = 0; i < 1400; i++) { const th = r() * Math.PI * 2, ph = Math.acos(0.15 + r() * 0.85), R = 140; sp.push(R * Math.sin(ph) * Math.cos(th), R * Math.cos(ph), R * Math.sin(ph) * Math.sin(th)); }
+  starGeo.setAttribute("position", new THREE.Float32BufferAttribute(sp, 3));
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.7, sizeAttenuation: true, fog: false })));
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(4, 24, 16), new THREE.MeshBasicMaterial({ color: 0xf2efe2, fog: false })); moon.position.set(-60, 70, -90); scene.add(moon);
+
+  /* floors */
+  floor(-6, 6, 6, 14, tileTex("#2d3140", "#3a3f50", "marble", 3), 0.35, { metalness: 0.2 });
+  floor(-8, 8, -10, 6, tileTex("#22252f", "#2f3340", "marble", 4), 0.3, { metalness: 0.25 });
+  floor(-20, -8, -18, 6, tileTex("#b8925d", "#a07c4b", "tile", 5), 0.9);
+  floor(8, 20, -18, 6, tileTex("#e8e8e4", "#d2d2cc", "tile", 6), 0.5);
+  floor(-8, 8, -18, -10, tileTex("#14162a", "#14162a", "carpet", 7), 1);
+  floor(-20, -6, 6, 14, tileTex("#0e2a3a", "#0e2a3a", "carpet", 8), 1);
+  floor(6, 20, 6, 14, tileTex("#a47c58", "#8d6847", "wood", 10), 0.6);
+
+  /* ceilings — the atrium stays open to the sky */
+  const dimPanel = new THREE.MeshBasicMaterial({ color: 0xcad3ff });
+  ceiling(-20, 20, 6, 14, { panelMat: dimPanel });
+  ceiling(-20, -8, -18, 6, { panels: false });
+  ceiling(8, 20, -18, 6, { panelMat: new THREE.MeshBasicMaterial({ color: 0xffffff }) });
+  ceiling(-8, 8, -18, -10, { panels: false });
+  for (let x = -8; x <= 8; x += 2) box(0.12, 0.2, 16, x, H, -2, beam, false);
+  for (let z = -10; z <= 6; z += 2) box(16, 0.2, 0.12, 0, H, z, beam, false);
+
+  /* walls */
+  wallX(14, -20, 20, [{ c: 0, w: 3.4 }]);
+  wallX(-18, -20, 20); wallZ(-20, -18, 14); wallZ(20, -18, 14);
+  wallX(6, -20, 20, [{ c: -13, w: 2.4 }, { c: 0, w: 6 }, { c: 13, w: 2.4 }]);
+  wallZ(-6, 6, 14, [{ c: 10, w: 2.4 }]); wallZ(6, 6, 14, [{ c: 10, w: 2.4 }]);
+  wallZ(-8, -18, 6, [{ c: -2, w: 3 }]); wallZ(8, -18, 6, [{ c: -2, w: 3 }]);
+  wallX(-10, -8, 8, [{ c: 0, w: 3 }]);
+
+  /* facade */
+  sign("AURORA MUSEUM", "SCIENCE · HISTORY · ART", 10, 2.5, 0, 5.2, 14.17, 0, ["#0d1120", "#E9E6FF", "#B7A6F2"]);
+  const banner = (x, title, sub, col) => plane(1.8, 4.2, new THREE.MeshBasicMaterial({ map: canvasTex(256, 600, (g, w, h) => {
+    g.fillStyle = col; g.fillRect(0, 0, w, h); g.fillStyle = "#fff"; g.textAlign = "center";
+    g.font = "800 44px system-ui, sans-serif"; title.split(" ").forEach((t, i) => g.fillText(t, w / 2, 220 + i * 54));
+    g.font = "500 22px ui-monospace, Consolas, monospace"; g.fillText(sub, w / 2, 420);
+  }) }), x, 3.4, 14.17);
+  banner(-6, "ANCIENT EGYPT", "GALLERY 1", "#8a5a1f"); banner(6, "OCEAN DEEP", "NEW", "#0d4a66");
+  for (const x of [-15, -10, 10, 15]) plane(3, 3.2, new THREE.MeshBasicMaterial({ color: 0x2b3a66 }), x, 2.6, 14.16);
+
+  /* ENTRANCE HALL */
+  box(4.4, 1.1, 0.9, 0, 0.55, 9.2, plinth); box(4.6, 0.06, 1.1, 0, 1.13, 9.2, M.metal, false);
+  plane(3.8, 1.2, new THREE.MeshBasicMaterial({ map: a.screenTex("Tonight", ["// open until 23:00", "Star show at 20:30 · Planetarium"], "#B7A6F2", ["#14122a", "#0d1b2e"]) }), 0, 3.95, 13.83, 0, Math.PI);
+  exhibit(0, 10.6, "Ticket Desk", "Buy tickets, pick up an audio guide and book the planetarium show.");
+  plant(-5, 13); plant(5, 13);
+  light("point", 0xe6e2ff, 35, 0, 6, 10);
+
+  /* ATRIUM — solar system */
+  const sun = new THREE.Mesh(new THREE.SphereGeometry(0.9, 32, 20), new THREE.MeshBasicMaterial({ color: 0xffb347 }));
+  sun.position.set(0, 4.4, -2); scene.add(sun);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 20), new THREE.MeshBasicMaterial({ color: 0xff8c2a, transparent: true, opacity: 0.18 })); halo.position.copy(sun.position); scene.add(halo);
+  const sunLight = light("point", 0xffb066, 60, 0, 4.4, -2);
+  const planets = [[1.6, 0.12, 0x9c9c9c], [2.2, 0.18, 0xe0b46c], [2.9, 0.2, 0x4a8fd6], [3.5, 0.15, 0xc1502e], [4.5, 0.42, 0xd9b38c], [5.5, 0.36, 0xe6d3a3], [6.3, 0.26, 0x8fd0e0], [6.9, 0.25, 0x4f6fd8]];
+  const orbitMat = new THREE.MeshBasicMaterial({ color: 0x5c5f80, transparent: true, opacity: 0.5 });
+  const pl = planets.map(([rad, size, col], i) => {
+    const o = new THREE.Mesh(new THREE.TorusGeometry(rad, 0.008, 4, 96), orbitMat); o.rotation.x = Math.PI / 2; o.position.copy(sun.position); scene.add(o);
+    const m = new THREE.Mesh(new THREE.SphereGeometry(size, 20, 14), new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 }));
+    if (i === 5) { const ring = new THREE.Mesh(new THREE.RingGeometry(size * 1.4, size * 2.2, 40), new THREE.MeshBasicMaterial({ color: 0xd8c79d, side: THREE.DoubleSide, transparent: true, opacity: 0.7 })); ring.rotation.x = Math.PI / 2.4; m.add(ring); }
+    scene.add(m); return { m, rad, speed: 0.6 / Math.sqrt(rad), off: r() * 6 };
+  });
+  animate((t) => {
+    pl.forEach((p) => { const ang = p.off + t * p.speed; p.m.position.set(Math.cos(ang) * p.rad, 4.4, -2 + Math.sin(ang) * p.rad); p.m.rotation.y = t; });
+    halo.scale.setScalar(1 + Math.sin(t * 2) * 0.04);
+  });
+  collide(-1.2, 1.2, -3.2, -0.8);
+  box(2.4, 0.5, 2.4, 0, 0.25, -2, plinth);
+  for (const [x, z] of [[-5.5, 2.5], [5.5, 2.5], [-5.5, -7], [5.5, -7]]) box(2.4, 0.45, 0.7, x, 0.225, z, plinth);
+  exhibit(0, 0.2, "Solar System", "A to-scale-ish model of our eight planets, orbiting under the open sky.");
+  sign("PLANETARIUM", "STAR SHOW · EVERY HOUR", 4, 1, 0, 4, -9.83, 0, ["#0d1120", "#E9E6FF", "#B7A6F2"]);
+  sign("ANCIENT EGYPT", null, 3, 0.7, -7.83, 4, -2, Math.PI / 2, ["#2a1a08", "#f4d9a6", "#c9a46a"]);
+  sign("MODERN ART", null, 3, 0.7, 7.83, 4, -2, -Math.PI / 2, ["#0d1120", "#ffffff", "#B7A6F2"]);
+
+  /* ANCIENT EGYPT */
+  const glyphTex = canvasTex(512, 512, (g, w, h) => {
+    g.fillStyle = "#c9a46a"; g.fillRect(0, 0, w, h);
+    const rr = rng(77); g.strokeStyle = "#5a3b14"; g.fillStyle = "#5a3b14"; g.lineWidth = 4;
+    for (let col = 0; col < 6; col++) {
+      g.fillRect(col * 85 + 4, 0, 2, h);
+      for (let row = 0; row < 7; row++) {
+        const x = col * 85 + 42, y = row * 72 + 36, k = rr();
+        g.beginPath();
+        if (k < 0.2) { g.arc(x, y, 14, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(x, y, 4, 0, Math.PI * 2); g.fill(); }
+        else if (k < 0.4) { g.moveTo(x - 20, y + 14); g.lineTo(x, y - 18); g.lineTo(x + 20, y + 14); g.closePath(); g.stroke(); }
+        else if (k < 0.6) { g.ellipse(x, y, 22, 10, 0, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(x, y, 5, 0, Math.PI * 2); g.fill(); }
+        else if (k < 0.8) { g.moveTo(x - 18, y); g.quadraticCurveTo(x, y - 30, x + 18, y); g.moveTo(x, y - 8); g.lineTo(x, y + 18); g.stroke(); }
+        else { for (let j = -1; j <= 1; j++) { g.moveTo(x - 18, y + j * 9); g.quadraticCurveTo(x - 9, y + j * 9 - 6, x, y + j * 9); g.quadraticCurveTo(x + 9, y + j * 9 + 6, x + 18, y + j * 9); } g.stroke(); }
+      }
+    }
+  });
+  for (const z of [-15, -9, -3, 3]) plane(5.6, 4.6, new THREE.MeshStandardMaterial({ map: glyphTex, roughness: 0.95 }), -19.84, 2.6, z, 0, Math.PI / 2);
+  plane(11.6, 4.6, new THREE.MeshStandardMaterial({ map: glyphTex, roughness: 0.95 }), -14, 2.6, -17.84);
+  // pyramids of Giza model
+  box(4.4, 0.7, 3.2, -14, 0.35, -13.5, plinth);
+  [[-15.2, -13.9, 0.95, 1.2], [-13.7, -13.2, 0.85, 1.05], [-12.6, -13.8, 0.5, 0.62]].forEach(([x, z, rad, h]) => {
+    const p = new THREE.Mesh(new THREE.ConeGeometry(rad, h, 4), sand); p.position.set(x, 0.7 + h / 2, z); p.rotation.y = Math.PI / 4; scene.add(p);
+  });
+  exhibit(-14, -11.4, "Giza Plateau Model", "Khufu, Khafre and Menkaure — the three pyramids at 1:2000 scale.");
+  // obelisks
+  for (const z of [-8, 1.5]) {
+    const ob = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.42, 4.2, 4), basalt); ob.position.set(-18.4, 2.1, z); ob.rotation.y = Math.PI / 4; scene.add(ob);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.5, 4), M.gold); tip.position.set(-18.4, 4.45, z); tip.rotation.y = Math.PI / 4; scene.add(tip);
+    collide(-18.9, -17.9, z - 0.5, z + 0.5);
+  }
+  exhibit(-17, -8, "Obelisk", "Granite obelisk with a gilded pyramidion — a replica of Karnak's.");
+  // golden mask in a case
+  const mask = new THREE.Group();
+  const stripes = canvasTex(256, 256, (g, w, h) => { for (let i = 0; i < 16; i++) { g.fillStyle = i % 2 ? "#1f3f8f" : "#d4a94e"; g.fillRect(0, i * 16, w, 16); } });
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.55, 0.9, 24, 1, true, -Math.PI * 0.85, Math.PI * 1.7), new THREE.MeshStandardMaterial({ map: stripes, metalness: 0.7, roughness: 0.3, side: THREE.DoubleSide }));
+  const face = new THREE.Mesh(new THREE.SphereGeometry(0.26, 24, 16), M.gold); face.scale.set(0.9, 1.15, 0.8); face.position.set(0, 0.05, 0.1);
+  const beard = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.3, 8), lapis); beard.position.set(0, -0.35, 0.12);
+  mask.add(head, face, beard); mask.position.set(-11.5, 1.75, -6); scene.add(mask);
+  box(1, 1.1, 1, -11.5, 0.55, -6, plinth);
+  box(1.05, 1.1, 1.05, -11.5, 1.65, -6, caseGlass, false);
+  animate((t) => { mask.rotation.y = Math.sin(t * 0.4) * 0.5; });
+  exhibit(-11.5, -4.6, "Golden Mask", "Gold and lapis funerary mask, inspired by the treasures of the Valley of the Kings.");
+  // sarcophagus
+  const sarcTex = canvasTex(256, 512, (g, w, h) => {
+    g.fillStyle = "#c79a3e"; g.fillRect(0, 0, w, h); g.fillStyle = "#1f3f8f";
+    for (let i = 0; i < 9; i++) g.fillRect(20, 120 + i * 40, w - 40, 14);
+    g.fillStyle = "#e8c77a"; g.beginPath(); g.ellipse(w / 2, 70, 60, 50, 0, 0, Math.PI * 2); g.fill();
+  });
+  const sarc = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.6, 2.4), new THREE.MeshStandardMaterial({ map: sarcTex, metalness: 0.5, roughness: 0.4 }));
+  sarc.position.set(-14, 0.95, 0.5); scene.add(sarc);
+  box(1.1, 0.65, 2.6, -14, 0.325, 0.5, plinth);
+  box(1.2, 1.1, 2.8, -14, 1.3, 0.5, caseGlass, false);
+  exhibit(-14, 2.4, "Painted Sarcophagus", "Gilded coffin with lapis bands, displayed in a climate-controlled case.");
+  // rosetta-style stone
+  const stoneTex = canvasTex(256, 360, (g, w, h) => { g.fillStyle = "#2c2c31"; g.fillRect(0, 0, w, h); g.strokeStyle = "rgba(200,200,210,.35)"; g.lineWidth = 1.5; for (let y = 16; y < h - 10; y += 9) { g.beginPath(); g.moveTo(14, y); for (let x = 14; x < w - 14; x += 6) g.lineTo(x, y + (Math.random() - 0.5) * 2); g.stroke(); } });
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.5, 0.3), new THREE.MeshStandardMaterial({ map: stoneTex, roughness: 0.6 }));
+  slab.position.set(-9.6, 1.55, -14); slab.rotation.y = -0.4; scene.add(slab); box(1.2, 0.8, 0.6, -9.6, 0.4, -14, plinth);
+  exhibit(-9.9, -12.6, "Inscribed Stone", "One decree, three scripts — the key that unlocked hieroglyphs.");
+  light("spot", 0xffd9a0, 80, -14, 6.6, -10, { angle: 0.5, tx: -14, ty: 0.7, tz: -13.5 });
+  light("spot", 0xffd9a0, 70, -11.5, 6.6, -3, { angle: 0.35, tx: -11.5, ty: 1.7, tz: -6 });
+  light("spot", 0xffd9a0, 70, -14, 6.6, 3, { angle: 0.4, tx: -14, ty: 1, tz: 0.5 });
+  light("point", 0xffc88a, 22, -15, 5, -4);
+
+  /* MODERN ART */
+  const works = ["Chromatic Field", "After Rain", "Market Day", "Overpass", "Bloom", "Static"];
+  for (let i = 0; i < 4; i++) { const z = -15 + i * 5.2; frameArt(140 + i, 19.8, 2.6, z, -Math.PI / 2, 2.2, 2.6, M.white); exhibit(18.6, z, `“${works[i]}”`, "Large canvas · mixed media"); }
+  for (let i = 0; i < 2; i++) { const x = 11 + i * 5; frameArt(150 + i, x, 2.6, -17.8, 0, 2.6, 2.2, M.white); exhibit(x, -16.6, `“${works[4 + i]}”`, "Large canvas · mixed media"); }
+  // light rings installation
+  const rings = [];
+  for (let i = 0; i < 6; i++) {
+    const m = new THREE.Mesh(new THREE.TorusGeometry(1.4 - i * 0.18, 0.035, 8, 64), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    m.position.set(13.5, 3.4, -8); scene.add(m); rings.push(m);
+  }
+  animate((t) => rings.forEach((m, i) => { m.rotation.x = t * (0.3 + i * 0.07); m.rotation.y = t * (0.2 + i * 0.05); m.material.color.setHSL((t * 0.05 + i / 6) % 1, 0.7, 0.65); }));
+  box(1.4, 0.3, 1.4, 13.5, 0.15, -8, plinth);
+  exhibit(13.5, -6.4, "Halo — Light Installation", "Six rings that drift and shift colour. Best viewed from the bench.");
+  // stacked cubes sculpture
+  const cubeMat = [0xb7a6f2, 0xe7c6a0, 0x7cc4b5, 0xf26d5b].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.35, metalness: 0.2 }));
+  for (let i = 0; i < 5; i++) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.8 - i * 0.1, 0.6, 0.8 - i * 0.1), cubeMat[i % 4]); c.position.set(11, 0.3 + i * 0.6, 1.5); c.rotation.y = i * 0.35; scene.add(c); }
+  collide(10.5, 11.5, 1, 2);
+  exhibit(11, 3, "Tower of Doubt", "Five painted aluminium blocks, each turned a little further.");
+  const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(0.8, 0.22, 160, 20), new THREE.MeshStandardMaterial({ color: 0xd8dde8, metalness: 1, roughness: 0.15 }));
+  knot.position.set(16.5, 2, 1.5); scene.add(knot); box(1.2, 0.6, 1.2, 16.5, 0.3, 1.5, plinth);
+  animate((t) => { knot.rotation.y = t * 0.3; });
+  exhibit(16.5, 3.2, "Endless", "Polished steel knot, 2 m tall.");
+  box(3, 0.45, 0.7, 13.5, 0.225, -3.5, plinth);
+  light("point", 0xffffff, 40, 14, 6, -10); light("point", 0xffffff, 35, 14, 6, 0);
+
+  /* PLANETARIUM */
+  const domeStars = new THREE.BufferGeometry(), ds = [];
+  for (let i = 0; i < 900; i++) { ds.push(-7.6 + r() * 15.2, H - 0.05 - r() * 0.3, -17.6 + r() * 7.3); }
+  domeStars.setAttribute("position", new THREE.Float32BufferAttribute(ds, 3));
+  const starPts = new THREE.Points(domeStars, new THREE.PointsMaterial({ color: 0xdfe6ff, size: 0.06 }));
+  scene.add(starPts);
+  const projector = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 14), M.metal); projector.position.set(0, 1.3, -14); scene.add(projector);
+  box(0.4, 0.8, 0.4, 0, 0.4, -14, plinth);
+  animate((t) => { starPts.material.size = 0.05 + Math.sin(t * 2) * 0.01; projector.rotation.y = t * 0.5; });
+  for (const z of [-16.5, -11.5]) for (const x of [-5, -2.6, 2.6, 5]) box(1.6, 0.5, 0.8, x, 0.25, z, new THREE.MeshStandardMaterial({ color: 0x2b2550, roughness: 0.8 }));
+  exhibit(0, -12.6, "Star Projector", "Projects 9,000 stars onto the ceiling for the hourly show.");
+  light("point", 0x7f6bff, 12, 0, 5.5, -14);
+
+  /* OCEAN DEEP */
+  const tankWater = new THREE.MeshBasicMaterial({ color: 0x0d5c86, transparent: true, opacity: 0.55 });
+  const fishCols = [0xffa24c, 0xffe066, 0x6be1ff, 0xff6fa0];
+  const fish = [];
+  [[-18.5, 9.8, 1.4, 5.5, "x"], [-12, 13.3, 6.5, 1.1, "z"]].forEach(([x, z, w, d, axis], ti) => {
+    box(w, 2.6, d, x, 1.6, z, tankWater, false); collide(x - w / 2, x + w / 2, z - d / 2, z + d / 2);
+    box(w + 0.1, 0.3, d + 0.1, x, 0.15, z, plinth, false);
+    for (let i = 0; i < 9; i++) {
+      const f = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.28, 8), new THREE.MeshBasicMaterial({ color: fishCols[i % 4] }));
+      f.rotation.z = Math.PI / 2; scene.add(f);
+      fish.push({ f, x, z, w: w * 0.4, d: d * 0.4, y: 0.9 + r() * 1.5, sp: 0.4 + r() * 0.6, ph: r() * 6 });
+    }
+  });
+  const whale = new THREE.Group();
+  const wBody = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), new THREE.MeshStandardMaterial({ color: 0x3a5f7a, roughness: 0.6 })); wBody.scale.set(3, 0.8, 0.9); whale.add(wBody);
+  const wTail = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.2, 4), wBody.material); wTail.rotation.z = Math.PI / 2; wTail.scale.z = 0.25; wTail.position.x = 3.3; whale.add(wTail);
+  whale.position.set(-13, 4.9, 9.2); scene.add(whale);
+  animate((t) => {
+    whale.position.y = 4.9 + Math.sin(t * 0.6) * 0.15; whale.rotation.z = Math.sin(t * 0.6) * 0.04; wTail.rotation.y = Math.sin(t * 1.5) * 0.3;
+    for (const p of fish) { const ang = p.ph + t * p.sp; p.f.position.set(p.x + Math.cos(ang) * p.w, p.y + Math.sin(ang * 2) * 0.1, p.z + Math.sin(ang) * p.d); p.f.rotation.y = -ang; }
+  });
+  exhibit(-18.5, 7, "Reef Tank", "Live-style reef with tropical fish, lit like 20 m underwater.");
+  exhibit(-13, 9.5, "Blue Whale (1:8)", "A model of the largest animal ever, suspended overhead.");
+  light("point", 0x2aa8ff, 40, -13, 5.5, 10);
+
+  /* MUSEUM SHOP */
+  const prodCols = [0xb7a6f2, 0xe7c6a0, 0x7cc4b5, 0xf26d5b, 0xffe066, 0x4c6fa8];
+  for (const z of [8.4, 12.8]) {
+    box(10, 2.2, 0.5, 13.5, 1.1, z, M.wood, true);
+    for (let s = 0; s < 3; s++) for (let i = 0; i < 12; i++) {
+      const p = new THREE.Mesh(new THREE.BoxGeometry(0.3 + r() * 0.3, 0.25 + r() * 0.2, 0.25), new THREE.MeshStandardMaterial({ color: prodCols[(i + s) % 6], roughness: 0.6 }));
+      p.position.set(9 + i * 0.8, 0.5 + s * 0.65, z + (z < 10 ? 0.38 : -0.38)); scene.add(p);
+    }
+  }
+  box(1.4, 1, 2.4, 18.8, 0.5, 10, plinth);
+  sign("SHOP", "books · replicas · star maps", 3, 0.75, 19.82, 3.6, 10, -Math.PI / 2, ["#0d1120", "#E9E6FF", "#B7A6F2"]);
+  exhibit(13.5, 10, "Museum Shop", "Replicas, books and star maps — every purchase supports the museum.");
+  light("point", 0xffe8cc, 35, 13.5, 6, 10);
+
+  /* global light */
+  scene.add(new THREE.HemisphereLight(0x8a93c8, 0x14161f, 0.55));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.12));
+  const moonLight = new THREE.DirectionalLight(0xb8c4ff, 0.55); moonLight.position.set(-30, 40, -20); scene.add(moonLight);
+  for (const x of [-3.2, 3.2]) for (const z of [17, 21]) { box(0.12, 3, 0.12, x, 1.5, z, M.dark); const l = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 8), new THREE.MeshBasicMaterial({ color: 0xdcd6ff })); l.position.set(x, 3.15, z); scene.add(l); }
+});
+</script>
+</body>
+</html>

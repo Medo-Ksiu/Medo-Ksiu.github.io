@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Horizon Center — 3D Tour</title>
+<meta name="description" content="First-person 3D walkthrough of a conference and expo venue. Desktop and phone.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../tour.css">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }</script>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="card">
+    <small>3D TOUR 01 · CONFERENCE &amp; EXPO</small>
+    <h1>Horizon Center</h1>
+    <p>Walk a fictional event venue in first person: lobby, a 120-seat main hall, a gallery, a tech expo, a meeting room and a café.</p>
+    <div class="keys" id="keys"></div>
+    <button class="go" id="go" type="button" disabled>Loading 3D engine…</button>
+    <div class="credit"><a href="../">← All tours</a> · Built by <a href="https://medo-ksiu.github.io/" target="_blank" rel="noopener">Mohamed Mohey AL-Deen</a></div>
+    <div class="err" id="err" hidden>The 3D engine couldn't load. Check your connection and refresh.</div>
+  </div>
+</div>
+<script>setTimeout(function () { if (!window.__tourReady) document.getElementById("err").hidden = false; }, 15000);</script>
+<script type="module">
+import { createTour } from "../engine.js";
+
+createTour({
+  title: "Horizon Center", accent: "#7CC4B5", H: 5.5,
+  start: { x: 0, z: 27, yaw: 0 },
+  entrance: { x: 0, z: 15, w: 3.2 },
+  map: { x0: -22, x1: 22, z0: -17, z1: 21 },
+  outside: { name: "Outside", tag: "HORIZON CENTER", spawn: [0, 27, 0] },
+  zones: [
+    { name: "Lobby", tag: "RECEPTION", x1: -8, x2: 8, z1: 5, z2: 15, spawn: [0, 13.5, 0] },
+    { name: "Corridor", tag: "CONNECTS ALL HALLS", x1: -20, x2: 20, z1: 1, z2: 5, spawn: [0, 3, 0], hideLabel: true },
+    { name: "Main Hall", tag: "AUDITORIUM", x1: -8, x2: 8, z1: -15, z2: 1, spawn: [0, -0.2, 0] },
+    { name: "Hall A", tag: "GALLERY", x1: -20, x2: -8, z1: -15, z2: 1, spawn: [-14, -0.5, 0] },
+    { name: "Hall B", tag: "TECH EXPO", x1: 8, x2: 20, z1: -15, z2: 1, spawn: [14, 0.2, 0.25] },
+    { name: "Meeting Room", tag: "12 SEATS", short: "Meeting", x1: -20, x2: -8, z1: 5, z2: 15, spawn: [-14, 6.3, Math.PI] },
+    { name: "Café", tag: "COFFEE & SNACKS", x1: 8, x2: 20, z1: 5, z2: 15, spawn: [11.5, 6.3, Math.PI * 0.85] }
+  ]
+}, (a) => {
+  const { THREE, scene, M, H, box, collide, plane, wallX, wallZ, floor, ceiling, plant, tree, sign, frameArt, light, exhibit, animate, tileTex, screenTex } = a;
+  const accentWall = new THREE.MeshStandardMaterial({ color: 0x2f5f63, roughness: 0.85 });
+  const seatMat = new THREE.MeshStandardMaterial({ color: 0x7a2f3f, roughness: 0.8 });
+
+  // outside
+  plane(4.5, 16, M.stone, 0, 0.003, 23, -Math.PI / 2);
+  plane(46, 3, M.stone, 0, 0.003, 16.6, -Math.PI / 2);
+  for (const [x, z] of [[-9, 22], [9, 22], [-15, 27], [15, 27], [-26, 8], [26, 8], [-26, -8], [26, -8], [-6, 31], [6, 31]]) tree(x, z);
+  for (const x of [-3.2, 3.2]) for (const z of [19, 24, 29]) {
+    box(0.12, 3.2, 0.12, x, 1.6, z, M.dark);
+    const l = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 8), M.panel); l.position.set(x, 3.3, z); scene.add(l);
+  }
+
+  // floors + ceiling
+  floor(-8, 8, 5, 15, tileTex("#e8e6e1", "#d3d0c8", "marble"));
+  floor(-20, 20, 1, 5, tileTex("#d9dedb", "#c4cbc7"));
+  floor(-8, 8, -15, 1, tileTex("#2c4d52", "#2c4d52", "carpet"), 1);
+  floor(-20, -8, -15, 1, tileTex("#cbb79a", "#b39d7f", "wood"), 0.6);
+  floor(8, 20, -15, 1, tileTex("#cfd6d4", "#b8c2bf"));
+  floor(-20, -8, 5, 15, tileTex("#bfc8c6", "#aab5b2", "carpet"), 1);
+  floor(8, 20, 5, 15, tileTex("#d9c4a6", "#c2ab8b", "wood"), 0.6);
+  ceiling(-20, 20, -15, 15);
+  box(41, 0.25, 0.8, 0, H + 0.42, 15.2, accentWall, false);
+
+  // walls
+  wallX(15, -20, 20, [{ c: 0, w: 3.2 }]);
+  wallX(-15, -20, 20); wallZ(-20, -15, 15); wallZ(20, -15, 15);
+  wallX(5, -20, 20, [{ c: -14, w: 2.2 }, { c: 0, w: 6 }, { c: 14, w: 2.2 }]);
+  wallX(1, -20, 20, [{ c: -14, w: 2.6 }, { c: 0, w: 4 }, { c: 14, w: 2.6 }]);
+  wallZ(-8, 5, 15); wallZ(8, 5, 15);
+  wallZ(-8, -15, 1, [], accentWall); wallZ(8, -15, 1, [], accentWall);
+
+  // facade + windows
+  for (const x of [-16, -11, 7, 12, 17]) plane(3.2, 2.4, M.facadeGlass, x, 2.6, 15.16);
+  for (const z of [-11, -5, 9, 13]) { plane(3.2, 2.4, M.facadeGlass, -20.16, 2.6, z, 0, -Math.PI / 2); plane(3.2, 2.4, M.facadeGlass, 20.16, 2.6, z, 0, Math.PI / 2); }
+  for (const x of [-15, -5, 5, 15]) plane(3.2, 2.4, M.facadeGlass, x, 2.6, -15.16, 0, Math.PI);
+  sign("HORIZON CENTER", "EVENTS · EXHIBITIONS · CONFERENCES", 9, 2.25, 0, 4.3, 15.17);
+  for (const z of [-11, -5, 9, 13]) { plane(3, 2.2, M.windowIn, -19.84, 2.7, z, 0, Math.PI / 2); plane(3, 2.2, M.windowIn, 19.84, 2.7, z, 0, -Math.PI / 2); }
+  for (const x of [-16, -11, 11, 16]) plane(3, 2.2, M.windowIn, x, 2.7, 14.84, 0, Math.PI);
+
+  // lobby
+  box(5.2, 1.1, 1, 0, 0.55, 10.2, M.woodLight);
+  box(5.4, 0.08, 1.2, 0, 1.14, 10.2, M.white, false);
+  sign("WELCOME", "LOBBY · RECEPTION", 6, 1.5, 0, 4.1, 5.17, Math.PI);
+  plant(-7, 14); plant(7, 14); plant(-7, 6.2); plant(7, 6.2);
+  for (const x of [-4.5, 4.5]) box(2.4, 0.45, 0.8, x, 0.225, 13.2, M.dark);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.06, 12, 64), new THREE.MeshBasicMaterial({ color: 0x7cc4b5 }));
+  ring.position.set(0, H - 0.6, 10); ring.rotation.x = Math.PI / 2; scene.add(ring);
+  animate((t) => { ring.rotation.z = t * 0.2; });
+  exhibit(0, 11.6, "Reception", "Check in, collect your badge and grab a venue map.");
+
+  // corridor
+  sign("MAIN HALL", "AUDITORIUM · 120 SEATS", 4, 1, 0, 3.9, 1.17);
+  sign("HALL A", "GALLERY", 2.6, 0.65, -14, 3.6, 1.17);
+  sign("HALL B", "TECH EXPO", 2.6, 0.65, 14, 3.6, 1.17);
+  sign("MEETING ROOM", null, 2.6, 0.65, -14, 3.6, 4.83, Math.PI);
+  sign("CAFÉ", null, 2.6, 0.65, 14, 3.6, 4.83, Math.PI);
+  for (const x of [-7, 7]) box(2, 0.45, 0.6, x, 0.225, 4.4, M.woodLight);
+  plant(-19, 3); plant(19, 3);
+
+  // main hall
+  box(12, 0.8, 4, 0, 0.4, -13, M.wood);
+  box(12.4, 0.12, 0.3, 0, 0.86, -11, M.dark, false);
+  plane(10, 4.6, new THREE.MeshBasicMaterial({ map: screenTex("Future Summit 2026", ["// main stage · live", "Keynotes, panels and product launches"]) }), 0, 3.25, -14.83);
+  box(1, 1.1, 0.6, 2.5, 1.35, -12, M.dark);
+  {
+    const seatGeo = new THREE.BoxGeometry(0.5, 0.45, 0.5), backGeo = new THREE.BoxGeometry(0.5, 0.65, 0.08);
+    const xs = []; for (let x = -6.4; x <= -1.6; x += 0.62) xs.push(x); for (let x = 1.6; x <= 6.4; x += 0.62) xs.push(x);
+    const zs = []; for (let z = -8.6; z <= -0.6; z += 1.25) zs.push(z);
+    const n = xs.length * zs.length;
+    const seats = new THREE.InstancedMesh(seatGeo, seatMat, n), backs = new THREE.InstancedMesh(backGeo, seatMat, n);
+    const o = new THREE.Object3D(); let i = 0;
+    for (const z of zs) {
+      for (const x of xs) {
+        o.position.set(x, 0.225, z); o.updateMatrix(); seats.setMatrixAt(i, o.matrix);
+        o.position.set(x, 0.7, z + 0.25); o.updateMatrix(); backs.setMatrixAt(i, o.matrix); i++;
+      }
+      collide(-6.75, -1.25, z - 0.28, z + 0.32); collide(1.25, 6.75, z - 0.28, z + 0.32);
+    }
+    scene.add(seats, backs);
+  }
+  exhibit(0, -9.6, "Main Stage", "120-seat auditorium with a 10 m LED wall for keynotes and launches.");
+  light("spot", 0xffffff, 90, 0, 5.2, -6, { angle: 0.55, tx: 0, ty: 0.8, tz: -13 });
+
+  // hall A gallery
+  const artNames = ["Tide Lines", "Copper Sun", "Night Market", "Quiet Field", "Signal", "Delta", "Dune Study"];
+  const spots = [];
+  for (let i = 0; i < 4; i++) { const z = -12.5 + i * 3.4; frameArt(11 + i, -19.8, 2.4, z, Math.PI / 2); spots.push([-18.6, z]); }
+  for (let i = 0; i < 3; i++) { const x = -17.5 + i * 3.6; frameArt(31 + i, x, 2.4, -14.8, 0); spots.push([x, -13.6]); }
+  spots.forEach(([x, z], i) => exhibit(x, z, `“${artNames[i]}”`, "Generated artwork · acrylic-style canvas, 160 × 200 cm"));
+  const sMat = [0x7cc4b5, 0xbba9f0, 0xe7c6a0, 0xd98c5f].map((c) => new THREE.MeshStandardMaterial({ color: c, metalness: 0.55, roughness: 0.25 }));
+  const sGeo = [new THREE.TorusKnotGeometry(0.35, 0.12, 120, 16), new THREE.IcosahedronGeometry(0.45, 0), new THREE.OctahedronGeometry(0.48, 0), new THREE.TorusGeometry(0.38, 0.14, 16, 48)];
+  const sNames = ["Infinite Knot", "Facet", "Prism", "Orbit"];
+  [[-16, -9], [-12, -9], [-16, -4.5], [-12, -4.5]].forEach(([x, z], i) => {
+    box(0.9, 1.05, 0.9, x, 0.525, z, M.white);
+    const m = new THREE.Mesh(sGeo[i], sMat[i]); m.position.set(x, 1.65, z); scene.add(m);
+    animate((t) => { m.rotation.y = t * 0.6 + i; m.rotation.x = Math.sin(t * 0.5 + i) * 0.3; m.position.y = 1.65 + Math.sin(t * 1.2 + i) * 0.06; });
+    exhibit(x, z + 1.1, sNames[i], "Rotating sculpture · polished metal on a white plinth");
+  });
+  light("point", 0xfff1dd, 45, -14, 4.8, -7);
+
+  // hall B tech expo
+  const booths = [["AI Lab", "Computer vision & LLM demos", "#7CC4B5"], ["Robotics", "Autonomous delivery prototypes", "#E7C6A0"], ["Smart Health", "Remote consultation platforms", "#BBA9F0"], ["Data Studio", "Live dashboards & analytics", "#F2A93B"]];
+  [[11.5, -12], [16.5, -12], [11.5, -6], [16.5, -6]].forEach(([x, z], i) => {
+    box(3, 1, 0.8, x, 0.5, z + 1.2, M.white);
+    box(3.2, 0.06, 1, x, 1.03, z + 1.2, M.dark, false);
+    box(0.08, 2.6, 0.08, x - 1.4, 1.3, z, M.metal, false); box(0.08, 2.6, 0.08, x + 1.4, 1.3, z, M.metal, false);
+    const b = booths[i];
+    plane(2.8, 1.5, new THREE.MeshBasicMaterial({ map: screenTex(b[0], [`// booth 0${i + 1}`, b[1]], b[2]) }), x, 2.05, z + 0.02);
+    collide(x - 1.5, x + 1.5, z - 0.1, z + 0.1);
+    exhibit(x, z + 2.3, `Booth 0${i + 1} — ${b[0]}`, b[1]);
+  });
+  const globe = new THREE.Mesh(new THREE.IcosahedronGeometry(1.1, 3), new THREE.MeshBasicMaterial({ color: 0x7cc4b5, wireframe: true }));
+  globe.position.set(14, 1.9, -1.8); scene.add(globe);
+  box(1.2, 0.6, 1.2, 14, 0.3, -1.8, M.dark);
+  animate((t) => { globe.rotation.y = t * 0.35; globe.rotation.x = 0.3; });
+  exhibit(14, -0.4, "Live Globe", "Real-time visitor map — every dot is a guest checking in.");
+  light("point", 0xe6f4ff, 45, 14, 4.8, -7);
+
+  // meeting room
+  box(6, 0.08, 1.6, -14, 0.76, 10, M.wood, false);
+  box(0.3, 0.72, 1, -16.5, 0.36, 10, M.dark, false); box(0.3, 0.72, 1, -11.5, 0.36, 10, M.dark, false);
+  collide(-17.2, -10.8, 8.9, 11.1);
+  for (let x = -16.4; x <= -11.6; x += 1.2) for (const z of [8.5, 11.5]) {
+    box(0.5, 0.45, 0.5, x, 0.45, z, M.dark, false);
+    box(0.5, 0.55, 0.06, x, 0.9, z + (z > 10 ? 0.25 : -0.25), M.dark, false);
+  }
+  plane(4, 2, M.white, -14, 2.2, 14.83, 0, Math.PI);
+  sign("Q4 PLANNING", "agenda · roadmap · budget", 3.4, 0.85, -14, 2.6, 14.82, Math.PI, ["#ffffff", "#1d2a2b", "#2E7769"]);
+  plant(-19.2, 14.2); plant(-8.8, 14.2);
+  exhibit(-14, 12.8, "Meeting Room", "12 seats · video conferencing · bookable from the venue app");
+
+  // café
+  box(1, 1.05, 7, 19.2, 0.525, 10, M.woodLight);
+  box(1.2, 0.06, 7.2, 19.2, 1.08, 10, M.dark, false);
+  sign("CAFÉ", "espresso · tea · fresh pastries", 4, 1, 19.82, 3.4, 10, -Math.PI / 2, ["#2b1f18", "#f1e3d3", "#D98C5F"]);
+  for (const [x, z] of [[11, 8], [11, 12], [14.6, 8], [14.6, 12]]) {
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.05, 24), M.white); t.position.set(x, 0.75, z); scene.add(t);
+    const s = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.75, 8), M.metal); s.position.set(x, 0.375, z); scene.add(s);
+    for (const ang of [0, Math.PI]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.45, 12), M.wood); st.position.set(x + Math.cos(ang) * 0.85, 0.225, z); scene.add(st); }
+    collide(x - 1.1, x + 1.1, z - 0.6, z + 0.6);
+  }
+  plant(8.8, 14.2); plant(8.8, 5.8, 0.8);
+  exhibit(17.8, 10, "Café Counter", "Order ahead from your phone and pick up here.");
+
+  // lighting
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x7d8b88, 1.25));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+  const sun = new THREE.DirectionalLight(0xfff3e0, 1.3); sun.position.set(20, 40, 30); scene.add(sun);
+  for (const [x, z, c, i] of [[0, 10, 0xfff6e8, 40], [0, -6, 0xfff1dd, 55], [-14, 10, 0xffffff, 30], [14, 10, 0xffe8cc, 30], [0, 3, 0xffffff, 25]]) light("point", c, i, x, 4.9, z);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Lumière Halls — 3D Tour</title>
+<meta name="description" content="First-person 3D walkthrough of a wedding and events venue. Desktop and phone.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../tour.css">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }</script>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="card">
+    <small>3D TOUR 02 · WEDDINGS &amp; EVENTS</small>
+    <h1>Lumière Halls</h1>
+    <p>An evening walk through a fictional wedding venue: the grand ballroom with its stage and dance floor, a henna hall, the bridal suite, a dessert lounge and a garden terrace under string lights.</p>
+    <div class="keys" id="keys"></div>
+    <button class="go" id="go" type="button" disabled>Loading 3D engine…</button>
+    <div class="credit"><a href="../">← All tours</a> · Built by <a href="https://medo-ksiu.github.io/" target="_blank" rel="noopener">Mohamed Mohey AL-Deen</a></div>
+    <div class="err" id="err" hidden>The 3D engine couldn't load. Check your connection and refresh.</div>
+  </div>
+</div>
+<script>setTimeout(function () { if (!window.__tourReady) document.getElementById("err").hidden = false; }, 15000);</script>
+<script type="module">
+import { createTour } from "../engine.js";
+
+createTour({
+  title: "Lumière Halls", accent: "#E2B26A", H: 6, exposure: 1.0,
+  wallColor: 0xf1e9dd, ceilingColor: 0xf6efe6,
+  sky: ["#1a1b3a", "#6d4a6c", "#e3a07a"],
+  fog: { color: 0x3b2c3e, near: 40, far: 130 },
+  start: { x: 0, z: 28, yaw: 0 },
+  entrance: { x: 0, z: 16, w: 3.6 },
+  map: { x0: -24, x1: 24, z0: -18, z1: 22 },
+  outside: { name: "Outside", tag: "LUMIÈRE HALLS", spawn: [0, 28, 0] },
+  zones: [
+    { name: "Foyer", tag: "WELCOME", x1: -7, x2: 7, z1: 8, z2: 16, spawn: [0, 14.5, 0] },
+    { name: "Gallery", tag: "CONNECTS ALL HALLS", x1: -22, x2: 22, z1: 4, z2: 8, spawn: [0, 6, 0], hideLabel: true },
+    { name: "Grand Ballroom", tag: "300 GUESTS", short: "Ballroom", x1: -14, x2: 14, z1: -16, z2: 4, spawn: [0, 2.6, 0] },
+    { name: "Pearl Hall", tag: "HENNA & ENGAGEMENTS", short: "Pearl", x1: -22, x2: -14, z1: -16, z2: 4, spawn: [-18, 2.4, 0] },
+    { name: "Garden Terrace", tag: "OPEN AIR", short: "Garden", x1: 14, x2: 22, z1: -16, z2: 4, spawn: [18, 2.2, 0] },
+    { name: "Bridal Suite", tag: "PRIVATE", short: "Bridal", x1: -22, x2: -7, z1: 8, z2: 16, spawn: [-14.5, 9.4, Math.PI] },
+    { name: "Dessert Lounge", tag: "CAKE & BUFFET", short: "Lounge", x1: 7, x2: 22, z1: 8, z2: 16, spawn: [14.5, 9.4, Math.PI] }
+  ]
+}, (a) => {
+  const { THREE, scene, M, H, box, collide, plane, wallX, wallZ, floor, ceiling, plant, tree, sign, frameArt, light, exhibit, animate, tileTex, canvasTex, rng } = a;
+  const ivory = new THREE.MeshStandardMaterial({ color: 0xfbf6ee, roughness: 0.75 });
+  const cloth = new THREE.MeshStandardMaterial({ color: 0xfdfaf4, roughness: 0.9 });
+  const blush = new THREE.MeshStandardMaterial({ color: 0xe9b7b9, roughness: 0.8 });
+  const rose = new THREE.MeshStandardMaterial({ color: 0xc8506a, roughness: 0.8 });
+  const velvet = new THREE.MeshStandardMaterial({ color: 0x6b2737, roughness: 0.85 });
+  const teal = new THREE.MeshStandardMaterial({ color: 0x1f5257, roughness: 0.85 });
+  const hedge = new THREE.MeshStandardMaterial({ color: 0x2f5e3a, roughness: 1 });
+  const glow = new THREE.MeshBasicMaterial({ color: 0xffd9a0 });
+  const crystal = new THREE.MeshStandardMaterial({ color: 0xfff6e0, emissive: 0xffe2a8, emissiveIntensity: 0.9, metalness: 0.3, roughness: 0.1 });
+
+  /* outside */
+  plane(5, 14, M.stone, 0, 0.003, 23, -Math.PI / 2);
+  plane(48, 3, M.stone, 0, 0.003, 17.6, -Math.PI / 2);
+  for (const [x, z] of [[-10, 22], [10, 22], [-17, 27], [17, 27], [-28, 0], [28, 10], [-28, 12], [-7, 32], [7, 32]]) tree(x, z);
+  for (const x of [-3.4, 3.4]) for (const z of [20, 25, 30]) {
+    box(0.12, 3, 0.12, x, 1.5, z, M.gold);
+    const l = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 8), glow); l.position.set(x, 3.15, z); scene.add(l);
+  }
+
+  /* floors */
+  floor(-7, 7, 8, 16, tileTex("#efe7da", "#d8ccb8", "marble", 5));
+  floor(-22, 22, 4, 8, tileTex("#e8dfd1", "#d2c5b2", "marble", 9));
+  floor(-14, 14, -16, 4, tileTex("#6b2737", "#6b2737", "carpet", 4), 1);
+  floor(-4, 4, -11, -5, tileTex("#1b1a1f", "#3a2f22", "checker", 2), 0.25, { metalness: 0.4, lift: 0.004, tile: 2 });
+  floor(-22, -14, -16, 4, tileTex("#1f5257", "#1f5257", "carpet", 8), 1);
+  floor(14, 22, -16, 4, tileTex("#86a77d", "#86a77d", "grass", 6), 1);
+  floor(-22, -7, 8, 16, tileTex("#e9d4cf", "#e9d4cf", "carpet", 11), 1);
+  floor(7, 22, 8, 16, tileTex("#cfb08a", "#b8976e", "wood", 12), 0.6);
+
+  /* ceilings (no ceiling over the garden) */
+  ceiling(-22, 22, 4, 16, { step: 4.5 });
+  ceiling(-22, 14, -16, 4, { panels: false });
+  box(45, 0.3, 0.9, 0, H + 0.45, 16.2, M.gold, false);
+
+  /* walls */
+  wallX(16, -22, 22, [{ c: 0, w: 3.6 }]);
+  wallX(-16, -22, 14); wallX(-16, 14, 22, [], hedge, 2.4);
+  wallZ(-22, -16, 16);
+  wallZ(22, 4, 16); wallZ(22, -16, 4, [], hedge, 1.2);
+  wallX(8, -22, 22, [{ c: -14.5, w: 2.2 }, { c: 0, w: 6 }, { c: 14.5, w: 2.2 }]);
+  wallX(4, -22, 22, [{ c: -18, w: 2.4 }, { c: 0, w: 5 }, { c: 18, w: 2.6 }]);
+  wallZ(-7, 8, 16); wallZ(7, 8, 16);
+  wallZ(-14, -16, 4, [{ c: -6, w: 2.4 }]);
+  wallZ(14, -16, 4, [{ c: -6, w: 3.4 }]);
+
+  /* facade */
+  sign("Lumière Halls", "WEDDINGS · ENGAGEMENTS · CELEBRATIONS", 10, 2.5, 0, 4.6, 16.17, 0, ["#1d1418", "#f6e7c9", "#E2B26A"], true);
+  for (const x of [-17, -11, 11, 17]) {
+    plane(2.6, 3.6, M.facadeGlass, x, 2.4, 16.16);
+    plane(2.4, 3.4, new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.35 }), x, 2.4, 16.17);
+  }
+
+  /* FOYER */
+  const arch = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.12, 12, 48, Math.PI), M.gold);
+  arch.position.set(0, 2.8, 14.6); scene.add(arch);
+  const fr = rng(4);
+  for (let i = 0; i < 46; i++) {
+    const t = Math.PI * (i / 45);
+    const f = new THREE.Mesh(new THREE.IcosahedronGeometry(0.14 + fr() * 0.1, 1), fr() < 0.5 ? blush : (fr() < 0.5 ? rose : ivory));
+    f.position.set(Math.cos(t) * 2.3 + (fr() - 0.5) * 0.3, 2.8 + Math.sin(t) * 2.3 + (fr() - 0.5) * 0.3, 14.6 + (fr() - 0.5) * 0.3); scene.add(f);
+  }
+  // welcome board on an easel
+  box(0.06, 1.8, 0.06, -4.3, 0.9, 11.6, M.gold, false); box(0.06, 1.8, 0.06, -3.3, 0.9, 11.6, M.gold, false);
+  const board = canvasTex(512, 640, (g, w, h) => {
+    g.fillStyle = "#fbf6ee"; g.fillRect(0, 0, w, h);
+    g.strokeStyle = "#d4a94e"; g.lineWidth = 8; g.strokeRect(24, 24, w - 48, h - 48);
+    g.fillStyle = "#8a6a3a"; g.textAlign = "center";
+    g.font = "500 28px ui-monospace, Consolas, monospace"; g.fillText("WELCOME TO THE WEDDING OF", w / 2, 170);
+    g.fillStyle = "#3a2a1e"; g.font = "italic 600 86px Georgia, serif"; g.fillText("Nour", w / 2, 300); g.font = "italic 400 50px Georgia, serif"; g.fillText("&", w / 2, 370); g.font = "italic 600 86px Georgia, serif"; g.fillText("Adam", w / 2, 460);
+    g.fillStyle = "#8a6a3a"; g.font = "500 26px ui-monospace, Consolas, monospace"; g.fillText("14 · 02 · 2027", w / 2, 540);
+  });
+  plane(1.2, 1.5, new THREE.MeshBasicMaterial({ map: board }), -3.8, 1.55, 11.64);
+  collide(-4.5, -3.1, 11.4, 11.8);
+  exhibit(-3.8, 12.6, "Welcome Board", "Personalised signage for every couple, printed or on a digital stand.");
+  for (const [x, z] of [[-6, 15], [6, 15], [-6, 9], [6, 9]]) plant(x, z, 1, blush);
+  box(4, 0.5, 0.9, 0, 0.25, 10, velvet);
+  exhibit(0, 11.3, "Foyer", "Guests arrive under a flower arch; the ballroom doors open straight ahead.");
+
+  /* GALLERY corridor */
+  for (let i = 0; i < 6; i++) { const x = -19 + i * 7.6; if (Math.abs(x) < 4) continue; frameArt(60 + i, x, 2.6, 7.83, Math.PI, 1.4, 1.1, M.gold); }
+  for (const x of [-20, -10, 10, 20]) { const s = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.1, 0.4, 8), glow); s.position.set(x, 3.2, 4.2); scene.add(s); }
+  sign("GRAND BALLROOM", null, 4.4, 1, 0, 4.1, 4.17, 0, ["#1d1418", "#f6e7c9", "#E2B26A"]);
+  sign("PEARL HALL", null, 2.6, 0.6, -18, 3.7, 4.17, 0, ["#1d1418", "#f6e7c9", "#E2B26A"]);
+  sign("GARDEN", null, 2.6, 0.6, 18, 3.7, 4.17, 0, ["#1d1418", "#f6e7c9", "#E2B26A"]);
+  sign("BRIDAL SUITE", null, 2.6, 0.6, -14.5, 3.7, 7.83, Math.PI, ["#1d1418", "#f6e7c9", "#E2B26A"]);
+  sign("DESSERT LOUNGE", null, 2.6, 0.6, 14.5, 3.7, 7.83, Math.PI, ["#1d1418", "#f6e7c9", "#E2B26A"]);
+
+  /* GRAND BALLROOM */
+  // stage (kosha)
+  box(10, 0.6, 3, 0, 0.3, -14.5, ivory);
+  box(3, 0.5, 0.9, 0, 0.85, -15, M.gold, false);
+  box(3, 0.9, 0.25, 0, 1.3, -15.45, M.gold, false);
+  const lightsTex = canvasTex(1024, 512, (g, w, h) => {
+    const grd = g.createLinearGradient(0, 0, 0, h); grd.addColorStop(0, "#2a1620"); grd.addColorStop(1, "#4a2430"); g.fillStyle = grd; g.fillRect(0, 0, w, h);
+    const r = rng(21);
+    for (let i = 0; i < 700; i++) { const x = r() * w, y = r() * h, s = 1 + r() * 2.5; g.fillStyle = `rgba(255,${200 + r() * 40},${140 + r() * 60},${0.5 + r() * 0.5})`; g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.fill(); }
+  });
+  plane(13.6, 5.6, new THREE.MeshBasicMaterial({ map: lightsTex }), 0, 3, -15.83);
+  const kArch = new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.14, 12, 48, Math.PI), M.gold); kArch.position.set(0, 0.6, -14.8); scene.add(kArch);
+  for (let i = 0; i < 60; i++) {
+    const t = Math.PI * (i / 59);
+    const f = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16 + fr() * 0.12, 1), fr() < 0.45 ? blush : (fr() < 0.5 ? ivory : rose));
+    f.position.set(Math.cos(t) * 2.6 + (fr() - 0.5) * 0.35, 0.6 + Math.sin(t) * 2.6 + (fr() - 0.5) * 0.35, -14.8 + (fr() - 0.5) * 0.4); scene.add(f);
+  }
+  exhibit(0, -11.6, "The Kosha", "Stage for the couple with a flower arch and a 14 m wall of fairy lights.");
+  // dance floor + moving lights
+  exhibit(0, -8, "Dance Floor", "8 × 6 m glossy floor with moving colour lights synced to the DJ.");
+  const s1 = light("spot", 0xff6fa0, 70, -3, 5.6, -8, { angle: 0.35, penumbra: 0.5, tx: 0, ty: 0, tz: -8 });
+  const s2 = light("spot", 0x6fc8ff, 70, 3, 5.6, -8, { angle: 0.35, penumbra: 0.5, tx: 0, ty: 0, tz: -8 });
+  animate((t) => {
+    s1.target.position.set(Math.sin(t * 0.9) * 3, 0, -8 + Math.cos(t * 0.7) * 2.5);
+    s2.target.position.set(Math.cos(t * 0.8) * 3, 0, -8 + Math.sin(t * 1.1) * 2.5);
+    s1.color.setHSL((t * 0.05) % 1, 0.8, 0.6); s2.color.setHSL((t * 0.05 + 0.5) % 1, 0.8, 0.6);
+  });
+  // round tables with chairs
+  const tables = [];
+  for (const x of [-11, -7.4, 7.4, 11]) for (const z of [-13, -9.5, -6, -2.5]) tables.push([x, z]);
+  tables.push([-4.6, -1.6], [4.6, -1.6]);
+  const chairGeo = new THREE.BoxGeometry(0.42, 0.06, 0.42), chairBack = new THREE.BoxGeometry(0.42, 0.55, 0.05), legGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.45, 6);
+  const nCh = tables.length * 8;
+  const seats = new THREE.InstancedMesh(chairGeo, M.gold, nCh), backs = new THREE.InstancedMesh(chairBack, M.gold, nCh);
+  const o = new THREE.Object3D(); let ci = 0;
+  for (const [x, z] of tables) {
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.0, 0.76, 28), cloth); top.position.set(x, 0.38, z); scene.add(top);
+    const vase = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.12, 0.5, 10), M.gold); vase.position.set(x, 1.0, z); scene.add(vase);
+    const bouquet = new THREE.Mesh(new THREE.IcosahedronGeometry(0.24, 1), fr() < 0.5 ? blush : ivory); bouquet.position.set(x, 1.35, z); scene.add(bouquet);
+    for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.12, 8), glow); c.position.set(x + Math.cos(k * 2.1) * 0.35, 0.82, z + Math.sin(k * 2.1) * 0.35); scene.add(c); }
+    for (let k = 0; k < 8; k++) {
+      const ang = (k / 8) * Math.PI * 2, cx = x + Math.cos(ang) * 1.35, cz = z + Math.sin(ang) * 1.35;
+      o.position.set(cx, 0.46, cz); o.rotation.set(0, -ang + Math.PI / 2, 0); o.updateMatrix(); seats.setMatrixAt(ci, o.matrix);
+      o.position.set(cx + Math.cos(ang) * 0.2, 0.76, cz + Math.sin(ang) * 0.2); o.updateMatrix(); backs.setMatrixAt(ci, o.matrix); ci++;
+    }
+    collide(x - 1.05, x + 1.05, z - 1.05, z + 1.05);
+  }
+  scene.add(seats, backs);
+  exhibit(-7.4, -0.9, "Guest Tables", "18 round tables of 8, each with candles and a fresh bouquet.");
+  // chandeliers
+  for (const [x, z] of [[0, -8], [-8.5, -4.5], [8.5, -4.5], [-8.5, -11], [8.5, -11]]) {
+    const g = new THREE.Group();
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.04, 8, 40), M.gold); ring.rotation.x = Math.PI / 2; g.add(ring);
+    const ring2 = ring.clone(); ring2.scale.setScalar(0.55); ring2.position.y = -0.45; g.add(ring2);
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.2, 6), M.gold); rod.position.y = 0.6; g.add(rod);
+    for (let i = 0; i < 18; i++) {
+      const ang = (i / 18) * Math.PI * 2, rr = i % 2 ? 0.9 : 0.5, y = i % 2 ? -0.25 : -0.7;
+      const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.08, 0), crystal); c.position.set(Math.cos(ang) * rr, y, Math.sin(ang) * rr); c.scale.y = 1.8; g.add(c);
+    }
+    g.position.set(x, H - 1.3, z); scene.add(g);
+    animate((t) => { g.rotation.y = t * 0.08; });
+  }
+  for (const [x, z] of [[0, -8], [-8.5, -6], [8.5, -6]]) light("point", 0xffdcae, 55, x, H - 1.8, z);
+
+  /* PEARL HALL (majlis) */
+  for (const z of [-14, -10, -6.5, -3, 0.5]) { box(1.2, 0.45, 2.6, -21.2, 0.225, z, teal); box(0.3, 0.6, 2.6, -21.8, 0.75, z, teal, false); }
+  for (const z of [-12, -5]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.35, 8), M.gold); t.position.set(-19.2, 0.175, z); scene.add(t); collide(-19.8, -18.6, z - 0.6, z + 0.6); }
+  const lanternGeo = new THREE.CylinderGeometry(0.22, 0.16, 0.55, 6);
+  for (let i = 0; i < 7; i++) {
+    const l = new THREE.Mesh(lanternGeo, new THREE.MeshBasicMaterial({ color: [0xffc46b, 0xff8f6b, 0xffe29a][i % 3] }));
+    const x = -20 + (i % 3) * 2, z = -14 + i * 2.2; l.position.set(x, 3.6 + (i % 2) * 0.5, z); scene.add(l);
+    animate((t) => { l.position.y = 3.6 + (i % 2) * 0.5 + Math.sin(t + i) * 0.05; });
+  }
+  light("point", 0xffb46b, 40, -18, 4.2, -6);
+  exhibit(-19.6, -8.5, "Pearl Hall", "Floor-seating majlis with brass tables and hanging lanterns, for henna nights and engagements.");
+
+  /* GARDEN TERRACE (open air) */
+  const fountain = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.6, 0.6, 32), ivory); fountain.position.set(18, 0.3, -7); scene.add(fountain);
+  const water = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, 0.05, 32), new THREE.MeshStandardMaterial({ color: 0x5aa7c4, roughness: 0.05, metalness: 0.3 })); water.position.set(18, 0.58, -7); scene.add(water);
+  const jet = new THREE.Mesh(new THREE.ConeGeometry(0.18, 1.6, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xbfe6f5, transparent: true, opacity: 0.55 })); jet.position.set(18, 1.4, -7); scene.add(jet);
+  animate((t) => { jet.scale.y = 1 + Math.sin(t * 3) * 0.08; });
+  collide(16.4, 19.6, -8.6, -5.4);
+  exhibit(18, -4.8, "Garden Fountain", "Open-air terrace for receptions and photos, lit by 200 string lights.");
+  tree(15.5, -14.5, 0.9, hedge); tree(20.8, -14.5, 0.9, hedge); tree(20.8, 1.5, 0.9, hedge);
+  for (const z of [-11, -2.5]) { box(2.2, 0.45, 0.6, 21.2, 0.225, z, M.wood); }
+  // string lights between poles
+  const poles = [[14.6, -15.4], [21.4, -15.4], [21.4, 3.4], [14.6, 3.4]];
+  for (const [x, z] of poles) box(0.1, 4.4, 0.1, x, 2.2, z, M.dark);
+  const bulbGeo = new THREE.SphereGeometry(0.06, 8, 6), bulbs = [];
+  const strands = [[poles[0], poles[2]], [poles[1], poles[3]], [poles[0], poles[1]], [poles[3], poles[2]], [[14.6, -6], [21.4, -6]]];
+  for (const [[ax, az], [bx, bz]] of strands) for (let i = 0; i <= 28; i++) {
+    const u = i / 28; const b = new THREE.Mesh(bulbGeo, new THREE.MeshBasicMaterial({ color: 0xffd9a0 }));
+    b.position.set(ax + (bx - ax) * u, 4.3 - Math.sin(u * Math.PI) * 0.9, az + (bz - az) * u); scene.add(b); bulbs.push(b);
+  }
+  animate((t) => { bulbs.forEach((b, i) => { const k = 0.75 + 0.25 * Math.sin(t * 2 + i * 1.7); b.material.color.setRGB(k, k * 0.85, k * 0.62); }); });
+  light("point", 0xffd9a0, 30, 18, 3.8, -11); light("point", 0xffd9a0, 30, 18, 3.8, -1);
+
+  /* BRIDAL SUITE */
+  box(3.4, 0.08, 0.7, -14.5, 0.8, 15.4, ivory); box(3.4, 0.8, 0.06, -14.5, 0.4, 15.7, ivory, false);
+  collide(-16.3, -12.7, 15, 15.8);
+  plane(2.6, 1.6, new THREE.MeshStandardMaterial({ color: 0xcfe0ea, metalness: 0.9, roughness: 0.05 }), -14.5, 2, 15.82, 0, Math.PI);
+  for (let i = 0; i < 10; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), glow); b.position.set(-15.9 + (i % 5) * 0.7, i < 5 ? 2.9 : 1.1, 15.78); scene.add(b); }
+  box(2.6, 0.45, 0.9, -19.5, 0.225, 11, blush); box(2.6, 0.6, 0.2, -19.5, 0.75, 10.55 + 0.9, blush, false);
+  const dress = new THREE.Group();
+  const skirt = new THREE.Mesh(new THREE.ConeGeometry(0.75, 1.3, 32, 1, true), ivory); skirt.position.y = 0.65; dress.add(skirt);
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.22, 0.6, 16), ivory); torso.position.y = 1.6; dress.add(torso);
+  dress.position.set(-9.5, 0, 14); scene.add(dress); collide(-10.3, -8.7, 13.2, 14.8);
+  plant(-21, 15); plant(-8, 9, 0.8, blush);
+  light("point", 0xffe2cc, 30, -14.5, 4.8, 12);
+  exhibit(-14.5, 13.6, "Vanity", "Lit mirror station for hair and make-up before the entrance.");
+  exhibit(-9.5, 12.4, "Bridal Suite", "Private room with a lounge, vanity and space for the dress.");
+
+  /* DESSERT LOUNGE */
+  const cake = new THREE.Group();
+  [[0.75, 0.4], [0.58, 0.38], [0.42, 0.36], [0.28, 0.32]].reduce((y, [r, h]) => {
+    const tier = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 32), ivory); tier.position.y = y + h / 2; cake.add(tier);
+    const band = new THREE.Mesh(new THREE.TorusGeometry(r, 0.02, 6, 40), M.gold); band.rotation.x = Math.PI / 2; band.position.y = y + 0.05; cake.add(band);
+    return y + h;
+  }, 0.9);
+  const topper = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16, 1), blush); topper.position.y = 2.45; cake.add(topper);
+  const cakeTable = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1, 0.9, 28), cloth); cakeTable.position.y = 0.45; cake.add(cakeTable);
+  cake.position.set(14.5, 0, 12); scene.add(cake); collide(13.5, 15.5, 11, 13);
+  animate((t) => { topper.rotation.y = t; });
+  exhibit(14.5, 10.4, "Wedding Cake", "Four-tier showpiece on a central table, cut after the first dance.");
+  box(6, 0.9, 0.9, 14.5, 0.45, 15.3, cloth);
+  for (let i = 0; i < 5; i++) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.metal); d.position.set(12.1 + i * 1.2, 0.92, 15.3); scene.add(d); }
+  exhibit(14.5, 14, "Buffet", "Hot and cold stations under silver cloches.");
+  for (const [x, z] of [[9.5, 10], [9.5, 13.5], [19.5, 10]]) {
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.04, 20), M.gold); t.position.set(x, 1.05, z); scene.add(t);
+    const s = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.05, 8), M.gold); s.position.set(x, 0.52, z); scene.add(s);
+    collide(x - 0.4, x + 0.4, z - 0.4, z + 0.4);
+  }
+  light("point", 0xffe2b8, 35, 14.5, 4.8, 12);
+
+  /* ambient light */
+  scene.add(new THREE.HemisphereLight(0xffe7d1, 0x40303a, 0.75));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.18));
+  const moon = new THREE.DirectionalLight(0xffc9a8, 0.6); moon.position.set(-20, 30, 30); scene.add(moon);
+  light("point", 0xffe6c4, 35, 0, 4.8, 12); light("point", 0xffe6c4, 20, -14, 4.8, 6); light("point", 0xffe6c4, 20, 14, 4.8, 6);
+});
+</script>
+</body>
+</html>
