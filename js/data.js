@@ -31,7 +31,7 @@ window.PORTFOLIO = {
     currentlyBuilding: "field-force CRM",
     // سيب الـ url فاضي "" وهيتخفي اللينك تلقائياً
     socials: [
-      { label: "GitHub", url: "https://github.com/Medo-Ksiu" },
+      { label: "GitHub", url: "" },
       { label: "LinkedIn", url: "" },
       { label: "WhatsApp", url: "" }
     ],
