@@ -201,7 +201,7 @@ window.PORTFOLIO = {
         "code": ""
       },
       "color": "#2E6B7A",
-      "image": "",
+      "image": "assets/projects/tour-horizon.jpg",
       "featured": true
     },
     {
@@ -250,7 +250,7 @@ window.PORTFOLIO = {
         "code": ""
       },
       "color": "#8A5A3C",
-      "image": ""
+      "image": "assets/projects/tour-lumiere.jpg"
     },
     {
       "id": "tour-aurora",
@@ -298,7 +298,7 @@ window.PORTFOLIO = {
         "code": ""
       },
       "color": "#4B3F8F",
-      "image": ""
+      "image": "assets/projects/tour-aurora.jpg"
     },
     {
       id: "skin-consult",
